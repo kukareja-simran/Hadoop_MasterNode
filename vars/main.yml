@@ -1,0 +1,6 @@
+---
+# vars file for Hadoop_namenode
+nnip: namenode ip
+nn_folder: namenode folder
+port_no: port
+

@@ -1,0 +1,79 @@
+---
+# tasks file for Hadoop_namenode
+- name: Copy files on Namenode
+  copy:
+    src: "{{ item }}"
+    dest: "/root/"
+  loop:
+          - jdk-8u171-linux-x64.rpm
+          - hadoop-1.2.1-1.x86_64.rpm
+  register: files
+- debug:
+        var: files
+
+- name: Install java on namenode
+  shell: "rpm -ivh jdk-8u171-linux-x64.rpm"
+  when: java.rc == 0
+  register: java
+- debug:
+        var: java
+
+- name: Install Hadoop on namenode
+  shell: "rpm -ivh hadoop-1.2.1-1.x86_64.rpm --force"
+  register: hadoop
+- debug:
+        var: hadoop
+
+- name: Creating workspace for namenode
+  file:
+    path: /{{ nn_folder }}
+    state: directory
+  register: folder
+- debug:
+        var: folder
+
+- name: Configuring hdfs-site.xml file
+  blockinfile:
+    path: /etc/hadoop/hdfs-site.xml
+    insertafter: "<configuration>"
+    block:
+            <property>
+            <name>fs.name.dir</name>
+            <value>{{ nn_folder }}</value>
+            </property>
+  register: hdfs_file
+- debug:
+        var: hdfs_file
+
+- name: Configuring core-site.xml file
+  blockinfile:
+    path: /etc/hadoop/core-site.xml
+    insertafter: "<configuration>"
+    block:
+            <property>
+            <name>dfs.default.name</name>
+            <value>hdfs://{{ nnip }}:{{ port_no }}</value>
+            </property>
+  register: core_file
+- debug:
+        var: core_file
+
+- name: Formatting Namenode
+  shell: "hadoop namenode -format"
+  register: format
+- debug:
+        var: format
+
+- name: Start Namenode
+  shell: "hadoop-daemon.sh start namenode"
+  register: status_nn
+- debug:
+        var: status_nn
+
+- name: Checking namenode service
+  shell: "jps"
+  register: jps
+- debug:
+        var: jps.stdout_lines
+
+
